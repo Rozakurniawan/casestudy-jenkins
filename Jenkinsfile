@@ -11,17 +11,11 @@ pipeline {
   }
 
   stages {
-    stage('Checkout Source Code') {
-      steps {
-        git url: 'https://github.com/Rozakurniawan/casestudy-jenkins.git', branch: 'main'
-      }
-    }
-
     stage('Build Docker Image') {
       steps {
         script {
-          echo "🛠️ Building image ${IMAGE}:${TAG}..."
-          def builtImage = docker.build("${IMAGE}:${TAG}")
+          echo "🛠 Building image ${IMAGE}:${TAG}..."
+          docker.build("${IMAGE}:${TAG}")
         }
       }
     }
