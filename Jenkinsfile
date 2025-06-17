@@ -37,6 +37,7 @@ pipeline {
             agent {
                 docker {
                     image 'alpine/helm:3.14.0'
+                    args '-v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
             steps {
