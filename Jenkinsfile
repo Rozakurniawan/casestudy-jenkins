@@ -15,7 +15,6 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    echo "🛠 Building image texsa/demo-app:latest..."
                     sh 'docker build -t texsa/demo-app:latest .'
                 }
             }
@@ -24,11 +23,12 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    echo "📦 Pushing image to DockerHub..."
-                    sh """
-                        echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u ${DOCKERHUB_CREDENTIALS_USR} --password-stdin
-                        docker push texsa/demo-app:latest
-                    """
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh '''
+                            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                            docker push texsa/demo-app:latest
+                        '''
+                    }
                 }
             }
         }
@@ -37,19 +37,19 @@ pipeline {
             agent {
                 docker {
                     image 'alpine/helm:3.14.0'
+                    args '--entrypoint=""'
                 }
             }
             steps {
                 withCredentials([file(credentialsId: 'kubeconfig-dev', variable: 'KUBE_FILE')]) {
                     script {
-                        echo "🚀 Deploying to Kubernetes via Helm..."
-                        sh """
+                        sh '''
                             export KUBECONFIG=$KUBE_FILE
                             helm upgrade --install casestudy-jenkins1 ./helm \
                               --set image.repository=texsa/demo-app \
                               --set image.tag=latest \
                               --namespace default --create-namespace
-                        """
+                        '''
                     }
                 }
             }
